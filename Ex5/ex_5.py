@@ -49,7 +49,6 @@ def make_dataset(dir, class_to_idx):
 
 def spect_loader(path, window_size, window_stride, window, normalize, max_len=101):
     y, sr = sf.read(path)
-    # n_fft = 4096
     n_fft = int(sr * window_size)
     win_length = n_fft
     hop_length = int(sr * window_stride)
@@ -63,7 +62,6 @@ def spect_loader(path, window_size, window_stride, window, normalize, max_len=10
     spect = np.log1p(spect)
 
     # make all spects with the same dims
-    # TODO: change that in the future
     if spect.shape[1] < max_len:
         pad = np.zeros((spect.shape[0], max_len - spect.shape[1]))
         spect = np.hstack((spect, pad))
@@ -138,10 +136,8 @@ class GCommandLoader(data.Dataset):
         Returns:
             tuple: (spect, target) where target is class_index of the target class.
         """
-        # print(index)
         path, target = self.spects[index]
         spect = self.loader(path, self.window_size, self.window_stride, self.window_type, self.normalize, self.max_len)
-        # print (path)
         if self.transform is not None:
             spect = self.transform(spect)
         if self.target_transform is not None:
@@ -170,7 +166,6 @@ class Model(nn.Module):
             nn.Conv2d(96, 128, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
-        # self.drop_out = nn.Dropout(0.15)
         self.fc1 = nn.Linear(7680, 30)
         self.fc11 = nn.Linear(30, 30)
 
@@ -183,7 +178,6 @@ class Model(nn.Module):
         out = self.layer3(out)
         out = self.layer4(out)
         out = out.reshape(out.size(0), -1)
-        # out = self.drop_out(out)
         out = self.fc1(out)
         out = self.fc11(out)
         out = self.fc2(out)
@@ -201,12 +195,6 @@ class Network():
         self.batch_size = batch_size
         self.net = self.model(dropout)
         self.opt = optimizer(self.net.parameters(), lr=self.rate)
-        # if(dropout != -1):
-        #     self.net = self.model(input_size,output_size,hidden_dim,n_layers)
-        # else:
-        #     # no dropout
-        #     self.net = self.model(28*28)
-        # self.opt = optimizer(self.net.parameters(), lr=self.rate)
 
     def train(self,train_loader):
         self.net.train()
@@ -235,8 +223,7 @@ class Network():
         # for debug
         test_loader_len = len(test_loader.dataset)
         loss/=test_loader_len
-        # print('validation result: avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(loss,correct,
-        #       test_loader_len,100.*correct/test_loader_len))
+        
         return correct
     # for checking
     def train_and_valid(self, train_loader, test_loader):
@@ -251,7 +238,6 @@ class Network():
         return best_correction
 
 def find_best_optimizer(training,valid,model,model_name):
-    #opt = {"SGD":optim.SGD,"ADAM":optim.Adam,"RMSprop":optim.RMSprop,"AdaDelta":optim.Adadelta}
     opt = {"AdaDelta": optim.Adadelta}
     rate = 0
     best_rate = 0
@@ -307,15 +293,6 @@ train_set = GCommandLoader('C:\\Users\\דורין דומין\\Documents\\לימ�
 valid_set = GCommandLoader('C:\\Users\\דורין דומין\\Documents\\לימודים\\למידת מכונה\\ex5\\valid')
 test_set = GCommandLoader('C:\\Users\\דורין דומין\\Documents\\לימודים\\למידת מכונה\\ex5\\test')
 
-#dataset = GCommandLoader('C:\\Users\\דורין דומין\\Documents\\לימודים\\אופטימיזציה\\check_for_delete\\train_short')
-
-#split given train into training and validation
-# train_part, valid_part = torch.utils.data.random_split(dataset, [round(len(dataset)*0.8),
-#     len(dataset)-round(len(dataset)*0.8)])
-
-#print(len(dataset))
-#split given train into training and validation
-
 # load
 train_loader = torch.utils.data.DataLoader(
     train_set, batch_size=1, shuffle=True,
@@ -347,8 +324,7 @@ with torch.no_grad():
         preds.append(str(name+","+cl))
         i+=1
 preds = sorted(preds,key=lambda x:int(x.split('.')[0]))
-#print("########################################################")
-#print(preds)
+
 with open("test_y","w") as file:
     for pr in preds:
         file.write(pr)
